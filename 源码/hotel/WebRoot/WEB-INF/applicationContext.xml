@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!--加载数据库配置文件-->
+    <context:property-placeholder location="classpath:db.properties" />
+
+    <!--阿里巴巴数据源配置-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${database.url}" />
+        <property name="username" value="${database.username}" />
+        <property name="password" value="${database.password}" />
+
+        <!--监控统计插件stat-->
+        <property name="filters" value="stat" />
+
+        <!--最大连接池数量-->
+        <property name="maxActive" value="20" />
+        <!--初始化时建立物理连接的个数-->
+        <property name="initialSize" value="1" />
+        <!--获取连接时最大等待时间-->
+        <property name="maxWait" value="60000" />
+        <!--最小连接池数量-->
+        <property name="minIdle" value="1" />
+
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        <!--连接保持空闲而不被驱逐的最小时间-->
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+
+        <!--检测连接是否有效-->
+        <property name="testWhileIdle" value="true" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+
+        <!--缓存PSCache.-->
+        <property name="poolPreparedStatements" value="true" />
+        <!--要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true.-->
+        <property name="maxOpenPreparedStatements" value="20" />
+
+        <!--如果有initialSize数量较多时，打开会加快应用启动时间-->
+        <property name="asyncInit" value="true" />
+    </bean>
+
+    <!--sessionFactoy配置-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <!--hibernate配置-->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL57Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <!--自动更新表结构-->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate5.SpringSessionContext</prop>
+                <prop key="hibernate.connection.url">jdbc:mysql://localhost:3306/hoteldb</prop>
+                <prop key="hibernate.connection.driver_class">com.mysql.jdbc.Driver</prop>
+
+                <!--开启缓存-->
+                <prop key="hibernate.cache.use_second_level_cache">true</prop>
+                <prop key="hibernate.cache.use_query_cache">true</prop>
+                <prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
+            </props>
+        </property>
+        <!--自动扫描注解方式配置的hibernate类文件-->
+        <property name="packagesToScan">
+            <list>
+                <value>com.jiudian</value>
+            </list>
+        </property>
+    </bean>
+
+    <!--设置hibernateTemplate模版-->
+    <bean id="hibernateTemplate" class="org.springframework.orm.hibernate5.HibernateTemplate">
+        <property name="sessionFactory" ref="sessionFactory" />
+        <property name="cacheQueries" value="true" />
+    </bean>
+
+    <!--配置事物管理器-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <!--配置事物通知属性-->
+<!--    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            &lt;!&ndash;定义事物传播属性.propagation的默认值"REQUIRED"&ndash;&gt;
+            <tx:method name="insert*" propagation="REQUIRED" />
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="edit*" propagation="REQUIRED" />
+            <tx:method name="save*" propagation="REQUIRED" />
+            <tx:method name="add*" propagation="REQUIRED" />
+            <tx:method name="new*" propagation="REQUIRED" />
+            <tx:method name="set*" propagation="REQUIRED" />
+            <tx:method name="remove*" propagation="REQUIRED" />
+            <tx:method name="delete*" propagation="REQUIRED" />
+            <tx:method name="change*" propagation="REQUIRED" />
+            <tx:method name="get*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="find*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="load*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="*" propagation="REQUIRED" read-only="true" />
+        </tx:attributes>
+    </tx:advice>-->
+
+    <!-- 配置事务切面 -->
+<!--    <aop:config>
+        <aop:pointcut expression="execution(* com.jiudian.core.base.BaseServiceImpl.*(..))" id="baseServiceOperation"/>
+        <aop:pointcut expression="execution(* com.jiudian..*.service.Impl.*ServiceImpl.*(..))" id="serviceOperation"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="baseServiceOperation"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceOperation"/>
+    </aop:config>-->
+
+    <tx:annotation-driven transaction-manager="transactionManager" />
+
+    <bean id="druid-stat-interceptor"
+          class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor">
+    </bean>
+
+    <bean id="druid-type-proxyCreator" class="com.alibaba.druid.support.spring.stat.BeanTypeAutoProxyCreator">
+        <!-- 所有BasaService的子类被拦截监控  -->
+        <property name="targetBeanType" value="com.jiudian.core.base.BaseService"/>
+        <property name="interceptorNames">
+            <list>
+                <value>druid-stat-interceptor</value>
+            </list>
+        </property>
+    </bean>
+
+    <!--启用spring注解-->
+    <context:component-scan base-package="com.jiudian" />
+
+    <!--开启@AspectJ AOP代理-->
+    <aop:aspectj-autoproxy />
+
+</beans>

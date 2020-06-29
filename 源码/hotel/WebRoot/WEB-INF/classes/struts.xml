@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+        "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+    <!--开发模式-->
+    <constant name="struts.devMode" value="true" />
+    <constant name="struts.i18n.encoding" value="UTF-8" />
+    <!--是否允许动态方法调用-->
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+    <!--由spring担任工程bean-->
+    <constant name="struts.objectFactory" value="spring" />
+    <!--是否允许浏览器缓存静态内容-->
+    <constant name="struts.serve.static.browserCache" value="false" />
+    <!--配置文件变化时是否重新加载-->
+    <constant name="struts.configuration.xml.reload" value="true" />
+    <!--设置struts2后缀名-->
+    <constant name="struts.action.extension" value="action" />
+    <!--设置struts2简单主题，不对标签添加任何内容-->
+    <constant name="struts.ui.theme" value="simple" />
+    <!--指定允许上传的文件最大字节数。默认值是2097152(2M)-->
+    <constant name="struts.multipart.maxSize" value="10701096"/>
+
+    <package name="my-default" extends="struts-default">
+        <interceptors>
+            <interceptor name="LoginInterceptor" class="com.jiudian.core.base.LoginInterceptor"></interceptor>
+            
+            <interceptor-stack name="MyInterceptor">
+                <interceptor-ref name="LoginInterceptor" />
+                <interceptor-ref name="defaultStack" />
+            </interceptor-stack>
+        </interceptors>
+
+        <global-results>
+            <result name="noPermissions">/sys/login.jsp</result>
+        </global-results>
+    </package>
+
+</struts>
